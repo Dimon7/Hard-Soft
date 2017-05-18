@@ -2,10 +2,14 @@ import { Component } from '@angular/core';
 import { Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-
+import { Geolocation } from '@ionic-native/geolocation';
+import {map} from "rxjs/operator/map";
 import { TabsPage } from '../pages/tabs/tabs';
 import { BLE } from '@ionic-native/ble';
-import { HTTP } from '@ionic-native/http';
+import { Observable } from 'rxjs/Observable/';
+
+import { Http, Headers } from '@angular/http';
+import 'rxjs/add/operator/map';
 
 
 @Component({
@@ -14,30 +18,55 @@ import { HTTP } from '@ionic-native/http';
 })
 export class MyApp {
   rootPage:any = TabsPage;
+
   id : string;
   characteristic : string;
   service : string;
-  headers = new Headers({
-      'Content-Type': 'application/json'
-  });
+  firstRead = true;
+  prev = [];
+  b = {};
+  headers = new Headers();
 
   constructor(platform: Platform, 
               statusBar: StatusBar,
               splashScreen: SplashScreen, 
               private ble: BLE,
-              private http: HTTP) {
-    /*platform.ready().then(() => {
-      // Okay, so the platform is ready and our plugins are available.
-      // Here you can do any higher level native things you might need.
-      statusBar.styleDefault();
-      splashScreen.hide();
-    });*/
+              public geolocation: Geolocation,
+              private http :  Http) {
 
 
-    ble.startScan([]).subscribe(device => {
-      console.log('Shalom');
-      console.log(JSON.stringify(device.name));
-      this.id = device.id; //PROPISI
+    
+    this.headers.append('Accept', 'application/json');
+   /* this.headers.append('Content-Type', 'application/json');
+    this.headers.append('Access-Control-Allow-Origin', '*');
+    this.headers.append('Access-Control-Allow-Credentials', 'true');
+    this.headers.append("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
+    this.headers.append("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token");*/
+   /* 
+
+
+    setInterval(() =>  {
+
+     
+        
+     
+     
+      
+    }, 1000);*/
+     let i = 0;
+    while (i<100){
+      setTimeout(console.log(this.geo()),2000);
+        
+        i++;
+    }
+    
+    
+  
+    console.log('ano');
+    this.id = "98:4F:EE:10:86:8A";
+
+    
+       //PROPISI
       // console.log(JSON.stringify(device.id));
       //console.log(JSON.stringify(device));
       ble.connect(this.id).subscribe( x => {
@@ -51,19 +80,14 @@ export class MyApp {
         //console.log(JSON.stringify(x));
         ble.read(this.id, this.service, this.characteristic).then( battery => {
           console.log('Send =>' , this.bytesToString(battery).charCodeAt() );
-        });
-
-
-        let body = JSON.stringify({
+          let body = JSON.stringify({
            'baterry' : battery,
-           'accelerate' : accelerate
+           // 'accelerate' : accelerate
 
+          });
+          console.log(body);
         });
-        this.http.post('', body,this.headers);
 
-
-        //ble.read(device_id, service_uuid, characteristic_uuid, success, failure);
-    });
 
     }, error => {
       console.log(error);
@@ -73,11 +97,62 @@ export class MyApp {
 
 
   }
-   bytesToString(buffer) {
-      return String.fromCharCode.apply(null, new Uint8Array(buffer));
-    }
 
+   
+
+  bytesToString(buffer) {
+    return String.fromCharCode.apply(null, new Uint8Array(buffer));
+  }
+
+   
+  geo(){
+  
+     this.geolocation.getCurrentPosition({enableHighAccuracy: true}).then((position) => {
+    
+        if (this.firstRead){
+          this.firstRead = false;
+
+          this.prev = [
+            position.coords.latitude,
+            position.coords.longitude
+          ]    
+
+        } else {
+          this.b = {
+            "path" : [this.prev, [
+            position.coords.latitude,
+            position.coords.longitude
+            ]],
+          }
+
+
+          this.prev = [
+            position.coords.latitude,
+            position.coords.longitude
+          ]  
+          console.log(this.b);
+          this.http.post('https://technobike.herokuapp.com/api/phone/position', this.b, this.headers)
+              .subscribe( x => {
+                 return x;
+              })
+                             
+
+        }
+
+      }, (err) => {
+      console.log(err);
+      });
+    
+
+  }
 }
+
+    
+
+   
+
+
+
 
 
 

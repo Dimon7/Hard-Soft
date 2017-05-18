@@ -10,6 +10,8 @@ import { TabsPage } from '../pages/tabs/tabs';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
+import { HttpModule } from '@angular/http';
+import {Geolocation} from '@ionic-native/geolocation';
 
 @NgModule({
   declarations: [
@@ -21,9 +23,11 @@ import { SplashScreen } from '@ionic-native/splash-screen';
   ],
   imports: [
     BrowserModule,
-    IonicModule.forRoot(MyApp)
+    HttpModule,
+    IonicModule.forRoot(MyApp),
+
   ],
-  bootstrap: [IonicApp],
+  bootstrap: [IonicApp ],
   entryComponents: [
     MyApp,
     AboutPage,
@@ -34,6 +38,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
   providers: [
     StatusBar,
     SplashScreen,
+    Geolocation,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })

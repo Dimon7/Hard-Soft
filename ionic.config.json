@@ -1,5 +1,9 @@
 {
   "name": "hands",
   "app_id": "",
-  "type": "ionic-angular"
+  "type": "ionic-angular",
+  "proxies": [{
+    "path": "/api",
+    "proxyUrl": "https://technobike.herokuapp.com/"
+  }]
 }
