@@ -60,14 +60,11 @@ export class MyApp {
     this.headers.append("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token");
    
     let i =0;
-    while(i < 100){
-        //this.helmet();
-        this.geo();
+   this.geo();
 
-        i++;  
 
       
-    }
+    
 
 
   }
