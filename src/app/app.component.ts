@@ -1,11 +1,14 @@
 import { Component } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Platform } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { Geolocation } from '@ionic-native/geolocation';
+import { Geolocation, Geoposition } from '@ionic-native/geolocation';
 import { TabsPage } from '../pages/tabs/tabs';
 import { BLE } from '@ionic-native/ble';
 
+
+import 'rxjs/add/operator/filter';
 import { Http, Headers } from '@angular/http';
 import 'rxjs/add/operator/map';
 
@@ -23,6 +26,8 @@ export class MyApp {
   firstRead = true;
   prev = [];
   //////////////
+  watch : any;
+
     turn;
     fall;
     battery;
@@ -34,12 +39,16 @@ export class MyApp {
   headers = new Headers();
   global = 'https://technobike.herokuapp.com/api/phone/position';
 
+  public lat: number = 0;
+  public lng: number = 0;
+
   constructor(platform: Platform, 
               statusBar: StatusBar,
               splashScreen: SplashScreen, 
               private ble: BLE,
               public geolocation: Geolocation,
-              private http :  Http) {
+              private http :  Http,
+              public zone: NgZone) {
 
 
     
@@ -52,7 +61,9 @@ export class MyApp {
    
     let i =0;
     while(i < 100){
-        this.helmet();
+        //this.helmet();
+        this.geo();
+
         i++;  
 
       
@@ -130,6 +141,7 @@ export class MyApp {
           this.body.push({
            "accelerate" : this.accelerate
           });
+
           console.log(this.body);
           this.body = []; //clear
 
@@ -146,7 +158,11 @@ export class MyApp {
   }
    
   geo(){
-    console.log('in');
+    let options = {
+      frequency: 3000, 
+      enableHighAccuracy: true
+    };
+   /* console.log('in');
      this.geolocation.getCurrentPosition({enableHighAccuracy: true}).then((position) => {
     
         if (this.firstRead){
@@ -177,9 +193,50 @@ export class MyApp {
         }
 
       }, (err) => {
-      console.log(err);
+        console.log(err);
       });
-    
+   */ 
+     this.watch = this.geolocation.watchPosition(options).filter((p: any) => p.code === undefined).subscribe((position: Geoposition) => {
+       
+       if (this.firstRead){
+          this.firstRead = false;
 
-  }
+          this.prev = [
+            position.coords.latitude,
+            position.coords.longitude
+          ]    
+
+        } else {
+          this.b = {
+            "path" : [this.prev, [
+              position.coords.latitude,
+              position.coords.longitude
+            ]],
+          }
+
+
+          this.prev = [
+            position.coords.latitude,
+            position.coords.longitude
+          ]  
+          console.log(this.b);
+          this.http.post(this.global, this.b, this.headers).subscribe( x => { console.log(x);  });
+                             
+
+        }
+      }
+
+        // console.log(position);
+       
+        // Run update inside of Angular's zone
+       /* this.zone.run(() => {
+          this.lat = position.coords.latitude;
+          this.lng = position.coords.longitude;
+        });
+
+        console.log(this.lat);
+        console.log(this.lng);
+     
+      });*/
+   )}
 }
